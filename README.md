@@ -47,13 +47,14 @@ impl BasaltoPlugin for MyPlugin {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
+#[allow(improper_ctypes_definitions)]
 pub extern "C" fn _basalto_create_plugin() -> *mut dyn BasaltoPlugin {
     Box::into_raw(Box::new(MyPlugin))
 }
 ```
 
-`#[no_mangle]` y `extern "C"` son necesarios para que basalto-core pueda encontrar el constructor por nombre dentro del `.so` en tiempo de ejecución.
+`#[unsafe(no_mangle)]` es la sintaxis correcta en edition 2024. `#[allow(improper_ctypes_definitions)]` es necesario porque `dyn BasaltoPlugin` no es un tipo C estándar — es intencional en este sistema de plugins con `libloading`.
 
 ---
 
@@ -87,7 +88,8 @@ impl BasaltoPlugin for MyPlugin {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
+#[allow(improper_ctypes_definitions)]
 pub extern "C" fn _basalto_create_plugin() -> *mut dyn BasaltoPlugin {
     Box::into_raw(Box::new(MyPlugin))
 }
