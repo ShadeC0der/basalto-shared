@@ -107,6 +107,35 @@ pub fn add(args: &[&str]) {
 }
 ```
 
+Para plugins con más de dos o tres comandos, es preferible una carpeta en lugar de un archivo único:
+
+```
+src/
+├── lib.rs
+├── commands/
+│   ├── mod.rs      ←  pub mod show; pub mod add;
+│   ├── show.rs
+│   └── add.rs
+```
+
+Cada comando vive aislado — agregar uno nuevo no toca los existentes.
+
+---
+
+## Declarar el plugin en el Core
+
+Para que basalto-core cargue el plugin, el usuario crea un archivo en `~/.basalto/plugins/`:
+
+**`~/.basalto/plugins/mi-plugin.toml`**
+
+```toml
+source = "git@github.com:usuario/basalto-myplugin.git"
+branch = "main"
+enabled = true
+```
+
+El Core clona el repo, lo compila y lo carga automáticamente en el próximo arranque. El nombre del archivo `.toml` puede ser cualquiera — el Core lo ignora y usa `name()` del trait para identificar el plugin.
+
 ---
 
 ## Dependencia
