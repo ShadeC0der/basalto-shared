@@ -6,6 +6,15 @@ Plugin contract for the Basalto ecosystem. Defines the `BasaltoPlugin` trait.
 
 Un plugin es un crate de Rust que compila a una librería dinámica `.so` e implementa `BasaltoPlugin`.
 
+### Crear la base
+
+```bash
+cargo new basalto-myplugin --lib
+cd basalto-myplugin
+```
+
+`--lib` genera un crate de librería. Después hay que ajustar el `Cargo.toml` para compilar como librería dinámica y agregar la dependencia de basalto-shared.
+
 **`Cargo.toml`**
 
 ```toml
