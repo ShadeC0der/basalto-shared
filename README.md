@@ -1,6 +1,6 @@
 # basalto-shared
 
-Plugin contract for the Basalto ecosystem. Defines the `BasaltoPlugin` trait.
+Contrato de plugins para el ecosistema Basalto. Define el trait `BasaltoPlugin`.
 
 ## Uso
 
@@ -27,7 +27,7 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-basalto-shared = { git = "ssh://git@github.com/ShadeC0der/basalto-shared.git", tag = "v1.0.0" }
+basalto-shared = { git = "ssh://git@github.com/ShadeC0der/basalto-shared.git", tag = "v1.2.0" }
 ```
 
 **`src/lib.rs`**
@@ -35,11 +35,14 @@ basalto-shared = { git = "ssh://git@github.com/ShadeC0der/basalto-shared.git", t
 ```rust
 use basalto_shared::BasaltoPlugin;
 
+// Exporta el simbolo de version para que el core valide compatibilidad
+basalto_shared::export_version!();
+
 struct MyPlugin;
 
 impl BasaltoPlugin for MyPlugin {
     fn name(&self) -> &str {
-        "my-plugin"
+        "my_plugin"
     }
 
     fn plugin_commands(&self) -> &[&str] {
@@ -67,10 +70,50 @@ pub extern "C" fn _basalto_create_plugin() -> *mut dyn BasaltoPlugin {
 
 ---
 
+## export_version!()
+
+Desde `v1.2.0`, todos los plugins deben llamar `basalto_shared::export_version!()` en `lib.rs`. Esto exporta el símbolo `_basalto_shared_version` al `.so`, que el dispatcher lee antes de cargar el plugin.
+
+Si el major version no coincide con el del core, el plugin se omite con un mensaje claro en lugar de crashear:
+
+```
+Plugin 'mi-plugin' usa basalto-shared v1.x.x (core usa v2.x.x). Corre: basalto update
+```
+
+---
+
+## Soporte para basalto help
+
+El método `command_help()` es opcional — si lo implementas, tus comandos aparecen en `basalto help` con descripción y flags. Si no lo implementas, el plugin sigue funcionando normalmente.
+
+```rust
+use basalto_shared::{BasaltoPlugin, CommandHelp, FlagHelp};
+
+impl BasaltoPlugin for MyPlugin {
+    // ...
+
+    fn command_help(&self) -> &'static [CommandHelp] {
+        &[
+            CommandHelp {
+                name: "my-command",
+                description: "Descripcion del comando",
+                flags: &[
+                    FlagHelp {
+                        name: "--flag",
+                        description: "Descripcion del flag",
+                    },
+                ],
+            },
+        ]
+    }
+}
+```
+
+---
+
 ## Estructura recomendada
 
-`execute_command` es el punto de entrada — la lógica real de cada
-comando vive en un archivo separado:
+`execute_command` es el punto de entrada — la lógica real de cada comando vive en un archivo separado:
 
 **`src/lib.rs`** — enrutador puro, sin lógica
 
@@ -79,10 +122,12 @@ mod commands;
 
 use basalto_shared::BasaltoPlugin;
 
+basalto_shared::export_version!();
+
 struct MyPlugin;
 
 impl BasaltoPlugin for MyPlugin {
-    fn name(&self) -> &str { "my-plugin" }
+    fn name(&self) -> &str { "my_plugin" }
 
     fn plugin_commands(&self) -> &[&str] { &["show", "add"] }
 
@@ -90,8 +135,8 @@ impl BasaltoPlugin for MyPlugin {
 
     fn execute_command(&self, command: &str, args: &[&str]) {
         match command {
-            "show" => commands::show(args),
-            "add"  => commands::add(args),
+            "show" => commands::show::run(args),
+            "add"  => commands::add::run(args),
             _      => {}
         }
     }
@@ -101,18 +146,6 @@ impl BasaltoPlugin for MyPlugin {
 #[allow(improper_ctypes_definitions)]
 pub extern "C" fn _basalto_create_plugin() -> *mut dyn BasaltoPlugin {
     Box::into_raw(Box::new(MyPlugin))
-}
-```
-
-**`src/commands.rs`** — lógica real de cada comando
-
-```rust
-pub fn show(args: &[&str]) {
-    // show logic
-}
-
-pub fn add(args: &[&str]) {
-    // add logic
 }
 ```
 
@@ -152,11 +185,11 @@ El Core clona el repo, lo compila y lo carga automáticamente en el próximo arr
 SSH:
 
 ```toml
-basalto-shared = { git = "ssh://git@github.com/ShadeC0der/basalto-shared.git", tag = "v1.0.0" }
+basalto-shared = { git = "ssh://git@github.com/ShadeC0der/basalto-shared.git", tag = "v1.2.0" }
 ```
 
 HTTPS:
 
 ```toml
-basalto-shared = { git = "https://github.com/ShadeC0der/basalto-shared", tag = "v1.0.0" }
+basalto-shared = { git = "https://github.com/ShadeC0der/basalto-shared", tag = "v1.2.0" }
 ```
