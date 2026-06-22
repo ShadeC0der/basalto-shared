@@ -1,3 +1,20 @@
+/// Version de basalto-shared contra la que fue compilado este plugin.
+/// El dispatcher la usa para verificar compatibilidad antes de cargar el .so.
+pub const SHARED_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// Exporta el simbolo _basalto_shared_version al .so del plugin.
+/// Llamar una vez en lib.rs: `basalto_shared::export_version!();`
+#[macro_export]
+macro_rules! export_version {
+    () => {
+        #[unsafe(no_mangle)]
+        #[allow(improper_ctypes_definitions)]
+        pub extern "C" fn _basalto_shared_version() -> &'static str {
+            $crate::SHARED_VERSION
+        }
+    };
+}
+
 pub struct FlagHelp {
     pub name: &'static str,
     pub description: &'static str,
